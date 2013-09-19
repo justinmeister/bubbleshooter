@@ -11,6 +11,8 @@ BUBBLERADIUS = 20
 BUBBLEWIDTH  = BUBBLERADIUS * 2
 BUBBLELAYERS = 5
 BUBBLEYADJUST = 7
+STARTX = WINDOWWIDTH / 2
+STARTY = WINDOWHEIGHT - 27
 
 
 RIGHT = 'right'
@@ -42,25 +44,48 @@ class Bubble(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.rect = pygame.Rect(0, 0, 40, 40)
-        self.speed = 5
+        self.rect.centerx = STARTX
+        self.rect.centery = STARTY + 20
+        self.speed = 10
         self.color = COLORLIST[random.randint(0, len(COLORLIST)-1)]
         self.radius = BUBBLERADIUS
+        self.angle = 0
 
-    def changePosition(self, degree):
-        xmove = xcalculate(degree)
-        ymove = ycalculate(degree)
+    def update(self):
+
+        if self.angle == 90:
+            xmove = 0
+            ymove = self.speed * -1
+        elif self.angle < 90:
+            xmove = self.xcalculate(self.angle)
+            ymove = self.ycalculate(self.angle)
+        elif self.angle > 90:
+            xmove = self.xcalculate(180 - self.angle) * -1
+            ymove = self.ycalculate(180 - self.angle)
+        
 
         self.rect.x += xmove
         self.rect.y += ymove
 
-        pygame.draw.circle(DISPLAYSURF, self.color, (self.rect.x, self.rect.y), self.radius) 
 
-    def xcalculate(self, degree):
-        radians = math.radians(degree)
-        xmoveRadians = math.cos(radians)*(self.speed)
-        xmove = math.degrees(xmoveRadians)
+    def draw(self):
+        pygame.draw.circle(DISPLAYSURF, self.color, (self.rect.x, self.rect.y), self.radius)
+        pygame.draw.circle(DISPLAYSURF, GRAY, (self.rect.x, self.rect.y), self.radius, 1)
 
+
+    def xcalculate(self, angle):
+        radians = math.radians(angle)
+        
+        xmove = math.cos(radians)*(self.speed)
         return xmove
+
+    def ycalculate(self, angle):
+        radians = math.radians(angle)
+        
+        ymove = math.sin(radians)*(self.speed) * -1
+        return ymove
+
+
 
     def drawNextBubble(self):
         nextRect = pygame.Rect(0, 0, 40, 40)
@@ -80,62 +105,32 @@ class Arrow(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        arrowImage, arrowRect = self.makeArrow()
+        self.angle = 90
+        arrowImage = pygame.image.load('Arrow.png')
+        arrowRect = arrowImage.get_rect()
         self.image = arrowImage
+        self.transformImage = self.image
         self.rect = arrowRect
-        self.rect.centerx = DISPLAYRECT.centerx
-        self.rect.bottom = DISPLAYRECT.bottom
-        self.angle = 0
-        self.lastRotate = time.time()
-
-
-    def makeArrow(self):
-        arrowImage  = pygame.image.load('Arrow.jpg')
-        arrowImage  = pygame.transform.flip(arrowImage, True, False)
-        arrowImage  = pygame.transform.rotate(arrowImage, 90)
-        arrowRect   = arrowImage.get_rect()
-        arrowWidth  = arrowRect.width / 28
-        arrowHeight = arrowRect.height / 28
-        arrowImage  = pygame.transform.scale(arrowImage, (arrowWidth, arrowHeight))
-        arrowRect   = arrowImage.get_rect()
-
-        return arrowImage, arrowRect
-
-
-    def drawArrow(self, direction):
+        self.rect.centerx = STARTX - 20
+        self.rect.centery = STARTY
         
-        if direction == LEFT and self.angle < 90:
+
+
+    def update(self, direction):
+        
+        if direction == LEFT and self.angle < 180:
             self.angle += 2
-            arrowToBlit = self.rotateArrow()
-            self.lastRotate = time.time()
-        elif direction == RIGHT and self.angle > -90:        
+        elif direction == RIGHT and self.angle > 0:        
             self.angle -= 2
-            arrowToBlit = self.rotateArrow()
-            self.lastRotate = time.time()    
-        else:
-            arrowToBlit = self.rotateArrow()
 
-        DISPLAYSURF.blit(arrowToBlit, self.rect)
+        self.transformImage = pygame.transform.rotate(self.image, self.angle)
+        self.rect = self.transformImage.get_rect()
+        self.rect.centerx = STARTX - 20
+        self.rect.centery = STARTY
 
-
-    def rotateArrow(self):
-        arrowToBlit = pygame.transform.rotate(self.image, self.angle)
-        arrowRect = arrowToBlit.get_rect()
-
-        oldWidth = self.rect.width
-        newWidth = arrowRect.width
-        adjustx = (newWidth - oldWidth) / 2
-
-        oldHeight = self.rect.height
-        newHeight = arrowRect.height
-        adjusty = (newHeight - oldHeight) / 2 
-
-        arrowRect.centerx = self.rect.centerx
-        arrowRect.centery = self.rect.centery 
-
-        self.rect = arrowRect
-
-        return arrowToBlit
+        
+    def draw(self):
+        DISPLAYSURF.blit(self.transformImage, self.rect)
         
 
 
@@ -155,10 +150,12 @@ def main():
 
 def runGame():
     direction = None
+    launchBubble = False
 
     arrow = Arrow()
-    newBubble = Bubble()
+    newBubble = None
     bubbleArray = makeBubbleArray()
+    
     
 
     while True:
@@ -177,16 +174,45 @@ def runGame():
             elif event.type == KEYUP:
                 direction = None
                 if event.key == K_SPACE:
-                    newBubble.getNewBubbleColor()
+                    launchBubble = True
                 elif event.key == K_ESCAPE:
                     terminate()
 
-                       
-        arrow.drawArrow(direction)
-        newBubble.drawNextBubble()
-        drawBubbleArray(bubbleArray)
+        if launchBubble == True:
+            if newBubble == None:
+                newBubble = Bubble()
+                newBubble.angle = arrow.angle
+
+            newBubble.update()
+            newBubble.draw()
+            
+            if newBubble.rect.y < 0:
+                newBubble = None
+                launchBubble = False
+            elif newBubble.rect.right >= WINDOWWIDTH + 22:
+                newBubble.angle = 180 - newBubble.angle
+            elif newBubble.rect.left <= 18:
+                newBubble.angle = 180 - newBubble.angle
+            
+
+        arrow.update(direction)
+        arrow.draw()
         
+        drawBubbleArray(bubbleArray)
         pygame.display.update()
+
+        
+    
+
+
+def showNextBubble(color):
+    nextRect = pygame.Rect(0, 0, 40, 40)
+    nextRect.bottom = WINDOWHEIGHT
+    nextRect.right = WINDOWWIDTH
+    circlePos = nextRect.center
+
+    pygame.draw.circle(DISPLAYSURF, color, circlePos, BUBBLERADIUS)
+    pygame.draw.circle(DISPLAYSURF, GRAY, circlePos, BUBBLERADIUS, 1)
 
 
 def makeBubbleArray():
