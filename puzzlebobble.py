@@ -155,6 +155,13 @@ def runGame():
     arrow = Arrow()
     newBubble = None
     bubbleArray = makeBubbleArray()
+
+    bubbleGroup = pygame.sprite.Group()
+    
+    for row in range(len(bubbleArray)):
+        for column in range(len(bubbleArray[row])):
+            bubbleGroup.add(bubbleArray[row][column])
+            
     
     
 
@@ -186,19 +193,32 @@ def runGame():
             newBubble.update()
             newBubble.draw()
             
-            if newBubble.rect.y < 0:
-                newBubble = None
-                launchBubble = False
-            elif newBubble.rect.right >= WINDOWWIDTH + 22:
+            
+            if newBubble.rect.right >= WINDOWWIDTH + 22:
                 newBubble.angle = 180 - newBubble.angle
             elif newBubble.rect.left <= 18:
                 newBubble.angle = 180 - newBubble.angle
+
+            hitBubble = pygame.sprite.spritecollide(newBubble, bubbleGroup, False)
+            if hitBubble:
+                stuckBubble = copy.deepcopy(newBubble)
+                bubbleGroup.add(stuckBubble)
+                newBubble = None
+                launchBubble = False
+                
+                
+                
+
+            
+                        
+                                                  
+                    
             
 
         arrow.update(direction)
         arrow.draw()
         
-        drawBubbleArray(bubbleArray)
+        drawBubbleGroup(bubbleGroup)
         pygame.display.update()
 
         
@@ -254,13 +274,10 @@ def deleteExtraBubbles(bubbleArray):
             
 
 
-def drawBubbleArray(bubbleArray):
-    for row in range(len(bubbleArray)):
-        for column in range(len(bubbleArray[row])):
-            bubble = bubbleArray[row][column]
-
-            pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
-            pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
+def drawBubbleGroup(bubbleGroup):
+    for bubble in bubbleGroup:
+        pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
+        pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
             
 
 
