@@ -13,6 +13,8 @@ BUBBLELAYERS = 5
 BUBBLEYADJUST = 7
 STARTX = WINDOWWIDTH / 2
 STARTY = WINDOWHEIGHT - 27
+ARRAYHEIGHT = 15
+ARRAYWIDTH = 16
 
 
 RIGHT = 'right'
@@ -43,14 +45,14 @@ class Bubble(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.rect = pygame.Rect(0, 0, 40, 40)
+        self.rect = pygame.Rect(0, 0, 30, 30)
         self.rect.centerx = STARTX
-        self.rect.centery = STARTY + 20
+        self.rect.centery = STARTY
         self.speed = 10
         self.color = COLORLIST[random.randint(0, len(COLORLIST)-1)]
         self.radius = BUBBLERADIUS
         self.angle = 0
-
+        
     def update(self):
 
         if self.angle == 90:
@@ -69,8 +71,8 @@ class Bubble(pygame.sprite.Sprite):
 
 
     def draw(self):
-        pygame.draw.circle(DISPLAYSURF, self.color, (self.rect.x, self.rect.y), self.radius)
-        pygame.draw.circle(DISPLAYSURF, GRAY, (self.rect.x, self.rect.y), self.radius, 1)
+        pygame.draw.circle(DISPLAYSURF, self.color, (self.rect.centerx, self.rect.centery), self.radius)
+        pygame.draw.circle(DISPLAYSURF, GRAY, (self.rect.centerx, self.rect.centery), self.radius, 1)
 
 
     def xcalculate(self, angle):
@@ -111,7 +113,7 @@ class Arrow(pygame.sprite.Sprite):
         self.image = arrowImage
         self.transformImage = self.image
         self.rect = arrowRect
-        self.rect.centerx = STARTX - 20
+        self.rect.centerx = STARTX
         self.rect.centery = STARTY
         
 
@@ -125,7 +127,7 @@ class Arrow(pygame.sprite.Sprite):
 
         self.transformImage = pygame.transform.rotate(self.image, self.angle)
         self.rect = self.transformImage.get_rect()
-        self.rect.centerx = STARTX - 20
+        self.rect.centerx = STARTX
         self.rect.centery = STARTY
 
         
@@ -151,20 +153,12 @@ def main():
 def runGame():
     direction = None
     launchBubble = False
-
-    arrow = Arrow()
     newBubble = None
+    
+    arrow = Arrow()
     bubbleArray = makeBubbleArray()
-
-    bubbleGroup = pygame.sprite.Group()
     
-    for row in range(len(bubbleArray)):
-        for column in range(len(bubbleArray[row])):
-            bubbleGroup.add(bubbleArray[row][column])
-            
-    
-    
-
+   
     while True:
         DISPLAYSURF.fill(BGCOLOR)
         
@@ -194,92 +188,122 @@ def runGame():
             newBubble.draw()
             
             
-            if newBubble.rect.right >= WINDOWWIDTH + 22:
+            if newBubble.rect.right >= WINDOWWIDTH - 5:
                 newBubble.angle = 180 - newBubble.angle
-            elif newBubble.rect.left <= 18:
+            elif newBubble.rect.left <= 5:
                 newBubble.angle = 180 - newBubble.angle
 
-            hitBubble = pygame.sprite.spritecollide(newBubble, bubbleGroup, False)
-            if hitBubble:
-                stuckBubble = copy.deepcopy(newBubble)
-                bubbleGroup.add(stuckBubble)
-                newBubble = None
-                launchBubble = False
-                
-                
-                
+            for row in range(ARRAYHEIGHT):
+                for column in range(len(bubbleArray[row])):
+                    if bubbleArray[row][column] != BLANK and newBubble != None:
+                        if pygame.sprite.collide_rect(newBubble, bubbleArray[row][column]):
+                            if newBubble.rect.centery >= bubbleArray[row][column].rect.centery:
 
-            
-                        
-                                                  
-                    
-            
+                                if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
+                                    if row == 0 or (row) % 2 == 0:
+                                        bubbleArray[row + 1][column] = copy.copy(newBubble)
+                                    else:
+                                        bubbleArray[row + 1][column + 1] = copy.copy(newBubble)
+                                    
+                                elif newBubble.rect.centerx < bubbleArray[row][column].rect.centerx:
+                                    if row == 0 or row % 2 == 0:
+                                        bubbleArray[row + 1][column - 1] = copy.copy(newBubble)
+                                    else:
+                                        bubbleArray[row + 1][column] = copy.copy(newBubble)
+                                    
+                            elif newBubble.rect.centery < bubbleArray[row][column].rect.centery:
+                                if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
+                                    if row == 0 or row % 2 == 0:
+                                        bubbleArray[row - 1][column] = copy.copy(newBubble)
+                                    else:
+                                        bubbleArray[row - 1][column + 1] = copy.copy(newBubble)
+                                    
+                                elif newBubble.rect.centerx <= bubbleArray[row][column].rect.centerx:
+                                    if row == 0 or row % 2 == 0:
+                                        bubbleArray[row - 1][column - 1] = copy.copy(newBubble)
+                                    else:
+                                        bubbleArray[row - 1][column] = copy.copy(newBubble)
+                                        
+                            newBubble = None
+                            launchBubble = False
+                            
+
+
+                     
 
         arrow.update(direction)
         arrow.draw()
+
+        setArrayPos(bubbleArray)
+        drawBubbleArray(bubbleArray)
         
-        drawBubbleGroup(bubbleGroup)
         pygame.display.update()
 
         
     
 
 
-def showNextBubble(color):
-    nextRect = pygame.Rect(0, 0, 40, 40)
-    nextRect.bottom = WINDOWHEIGHT
-    nextRect.right = WINDOWWIDTH
-    circlePos = nextRect.center
-
-    pygame.draw.circle(DISPLAYSURF, color, circlePos, BUBBLERADIUS)
-    pygame.draw.circle(DISPLAYSURF, GRAY, circlePos, BUBBLERADIUS, 1)
-
-
 def makeBubbleArray():
     bubbleArray = []
+
+    for row in range(ARRAYHEIGHT):
+        column = []
+        for i in range(ARRAYWIDTH):
+            column.append(BLANK)
+        bubbleArray.append(column)
+
     for row in range(BUBBLELAYERS):
-        collumn = []
-        for i in range(16):
+        for column in range(len(bubbleArray[row])):
             newBubble = Bubble()
-            collumn.append(newBubble)
-        bubbleArray.append(collumn)
-
+            bubbleArray[row][column] = newBubble 
+            
     setArrayPos(bubbleArray)
-
     return bubbleArray
 
 
+
 def setArrayPos(bubbleArray):
-    for row in range(len(bubbleArray)):
+    for row in range(ARRAYHEIGHT):
         for column in range(len(bubbleArray[row])):
-            bubbleArray[row][column].rect.x = (BUBBLEWIDTH * column)
-            bubbleArray[row][column].rect.y = (BUBBLEWIDTH * row)
+            if bubbleArray[row][column] != BLANK:
+                bubbleArray[row][column].rect.x = (BUBBLEWIDTH * column) + 5
+                bubbleArray[row][column].rect.y = (BUBBLEWIDTH * row) + 5
 
-    for row in range(1, len(bubbleArray), 2):
+    for row in range(1, ARRAYHEIGHT, 2):
         for column in range(len(bubbleArray[row])):
-              bubbleArray[row][column].rect.x += BUBBLERADIUS
+            if bubbleArray[row][column] != BLANK:
+                bubbleArray[row][column].rect.x += BUBBLERADIUS
 
-    for row in range(1, len(bubbleArray)):
+    for row in range(1, ARRAYHEIGHT):
         for column in range(len(bubbleArray[row])):
-            bubbleArray[row][column].rect.y -= BUBBLEYADJUST * row
+            if bubbleArray[row][column] != BLANK:
+                bubbleArray[row][column].rect.y -= BUBBLEYADJUST * row
 
     deleteExtraBubbles(bubbleArray)
 
 
+
 def deleteExtraBubbles(bubbleArray):
-    for row in range(len(bubbleArray)):
+    for row in range(ARRAYHEIGHT):
         for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column].rect.right > WINDOWWIDTH:
-                del bubbleArray[row][column]
+            if bubbleArray[row][column] != BLANK:
+                if bubbleArray[row][column].rect.right > WINDOWWIDTH:
+                    del bubbleArray[row][column]
             
 
 
-def drawBubbleGroup(bubbleGroup):
-    for bubble in bubbleGroup:
-        pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
-        pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
-            
+def drawBubbleArray(bubbleArray):
+    for row in range(ARRAYHEIGHT):
+        for column in range(len(bubbleArray[row])):
+            if bubbleArray[row][column] != BLANK:
+                bubble = bubbleArray[row][column]
+                pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
+                pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
 
+
+
+
+                    
 
 def makeDisplay():
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
