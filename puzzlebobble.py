@@ -42,14 +42,14 @@ COLORLIST = [RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, CYAN]
      
 
 class Bubble(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, color):
         pygame.sprite.Sprite.__init__(self)
 
         self.rect = pygame.Rect(0, 0, 30, 30)
         self.rect.centerx = STARTX
         self.rect.centery = STARTY
         self.speed = 10
-        self.color = COLORLIST[random.randint(0, len(COLORLIST)-1)]
+        self.color = color
         self.radius = BUBBLERADIUS
         self.angle = 0
         
@@ -88,18 +88,6 @@ class Bubble(pygame.sprite.Sprite):
         return ymove
 
 
-
-    def drawNextBubble(self):
-        nextRect = pygame.Rect(0, 0, 40, 40)
-        nextRect.bottom = WINDOWHEIGHT
-        nextRect.right = WINDOWWIDTH
-        circlePos = nextRect.center
-
-        pygame.draw.circle(DISPLAYSURF, self.color, circlePos, BUBBLERADIUS)
-        pygame.draw.circle(DISPLAYSURF, GRAY, circlePos, BUBBLERADIUS, 1)
-
-    def getNewBubbleColor(self):
-        self.color = COLORLIST[random.randint(0, len(COLORLIST)-1)]
 
 
 
@@ -156,7 +144,11 @@ def runGame():
     newBubble = None
     
     arrow = Arrow()
+    arrowTop = arrow.rect.top
     bubbleArray = makeBubbleArray()
+    nextBubble = Bubble(getRandomColor())
+    nextBubble.rect.right = WINDOWWIDTH - 5
+    nextBubble.rect.bottom = WINDOWHEIGHT - 5
     
    
     while True:
@@ -181,7 +173,7 @@ def runGame():
 
         if launchBubble == True:
             if newBubble == None:
-                newBubble = Bubble()
+                newBubble = Bubble(nextBubble.color)
                 newBubble.angle = arrow.angle
 
             newBubble.update()
@@ -226,14 +218,15 @@ def runGame():
                                         
                             newBubble = None
                             launchBubble = False
+                            nextBubble = Bubble(getRandomColor())
+                            nextBubble.rect.right = WINDOWWIDTH - 5
+                            nextBubble.rect.bottom = WINDOWHEIGHT - 5
                             
-
-
-                     
-
+        nextBubble.draw()
+        
         arrow.update(direction)
         arrow.draw()
-
+        
         setArrayPos(bubbleArray)
         drawBubbleArray(bubbleArray)
         
@@ -254,7 +247,7 @@ def makeBubbleArray():
 
     for row in range(BUBBLELAYERS):
         for column in range(len(bubbleArray[row])):
-            newBubble = Bubble()
+            newBubble = Bubble(getRandomColor())
             bubbleArray[row][column] = newBubble 
             
     setArrayPos(bubbleArray)
@@ -302,6 +295,16 @@ def drawBubbleArray(bubbleArray):
 
 
 
+def getRandomColor():
+    return COLORLIST[random.randint(0, len(COLORLIST)-1)]
+
+
+
+def bottomLineDraw():
+    startPos = (0, WINDOWHEIGHT - 65)
+    endPos = (WINDOWWIDTH, WINDOWHEIGHT - 65)
+    
+    pygame.draw.line(DISPLAYSURF, BLUE, startPos, endPos, 3)
 
                     
 
