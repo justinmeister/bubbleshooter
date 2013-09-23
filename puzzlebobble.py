@@ -142,6 +142,7 @@ def runGame():
     direction = None
     launchBubble = False
     newBubble = None
+    deleteList = []
     
     arrow = Arrow()
     arrowTop = arrow.rect.top
@@ -193,28 +194,60 @@ def runGame():
 
                                 if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
                                     if row == 0 or (row) % 2 == 0:
-                                        bubbleArray[row + 1][column] = copy.copy(newBubble)
+                                        newRow = row + 1
+                                        newColumn = column
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                        
                                     else:
-                                        bubbleArray[row + 1][column + 1] = copy.copy(newBubble)
+                                        newRow = row + 1
+                                        newColumn = column + 1
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
                                     
                                 elif newBubble.rect.centerx < bubbleArray[row][column].rect.centerx:
                                     if row == 0 or row % 2 == 0:
-                                        bubbleArray[row + 1][column - 1] = copy.copy(newBubble)
+                                        newRow = row + 1
+                                        newColumn = column - 1
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
                                     else:
-                                        bubbleArray[row + 1][column] = copy.copy(newBubble)
+                                        newRow = row + 1
+                                        newColumn = column
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                        
                                     
                             elif newBubble.rect.centery < bubbleArray[row][column].rect.centery:
                                 if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
                                     if row == 0 or row % 2 == 0:
-                                        bubbleArray[row - 1][column] = copy.copy(newBubble)
+                                        newRow = row - 1
+                                        newColumn = column
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
                                     else:
-                                        bubbleArray[row - 1][column + 1] = copy.copy(newBubble)
+                                        newRow = row - 1
+                                        newColumn = column + 1
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
                                     
                                 elif newBubble.rect.centerx <= bubbleArray[row][column].rect.centerx:
                                     if row == 0 or row % 2 == 0:
-                                        bubbleArray[row - 1][column - 1] = copy.copy(newBubble)
+                                        newRow = row - 1
+                                        newColumn = column - 1
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                        
                                     else:
-                                        bubbleArray[row - 1][column] = copy.copy(newBubble)
+                                        newRow = row - 1
+                                        newColumn = column
+                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                        
+
+                            popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
+                            print deleteList
+                            if len(deleteList) >= 3:
+                                for pos in deleteList:
+                                    row = pos[0]
+                                    column = pos[1]
+                                    bubbleArray[row][column] = BLANK
+
+                            deleteList = []
+
+                            
                                         
                             newBubble = None
                             launchBubble = False
@@ -233,7 +266,33 @@ def runGame():
         pygame.display.update()
 
         
+
+
+def popBubbles(bubbleArray, row, column, color, deleteList):
+    if bubbleArray[row][column] == BLANK:
+        return
     
+    elif bubbleArray[row][column].color != color:
+        return
+
+    for bubble in deleteList:
+        if bubbleArray[bubble[0]][bubble[1]] == bubbleArray[row][column]:
+            return
+
+    deleteList.append((row, column))
+
+    if row > 0 and row < len(bubbleArray) and column > 0 and column < ARRAYHEIGHT:
+
+        popBubbles(bubbleArray, row + 1, column, color, deleteList)
+        popBubbles(bubbleArray, row - 1, column, color, deleteList)
+        popBubbles(bubbleArray, row, column + 1, color, deleteList)
+        popBubbles(bubbleArray, row, column - 1, color, deleteList)
+
+    
+    
+
+
+
 
 
 def makeBubbleArray():
