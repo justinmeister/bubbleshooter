@@ -13,8 +13,8 @@ BUBBLELAYERS = 5
 BUBBLEYADJUST = 7
 STARTX = WINDOWWIDTH / 2
 STARTY = WINDOWHEIGHT - 27
-ARRAYHEIGHT = 15
 ARRAYWIDTH = 16
+ARRAYHEIGHT = 14
 
 
 RIGHT = 'right'
@@ -143,10 +143,13 @@ def runGame():
     launchBubble = False
     newBubble = None
     deleteList = []
+    floaterList = []
     
     arrow = Arrow()
     arrowTop = arrow.rect.top
     bubbleArray = makeBubbleArray()
+    print len(bubbleArray)
+    print len(bubbleArray[0])
     nextBubble = Bubble(getRandomColor())
     nextBubble.rect.right = WINDOWWIDTH - 5
     nextBubble.rect.bottom = WINDOWHEIGHT - 5
@@ -186,8 +189,9 @@ def runGame():
             elif newBubble.rect.left <= 5:
                 newBubble.angle = 180 - newBubble.angle
 
-            for row in range(ARRAYHEIGHT):
+            for row in range(len(bubbleArray)):
                 for column in range(len(bubbleArray[row])):
+                    
                     if bubbleArray[row][column] != BLANK and newBubble != None:
                         if pygame.sprite.collide_rect(newBubble, bubbleArray[row][column]):
                             if newBubble.rect.centery >= bubbleArray[row][column].rect.centery:
@@ -238,12 +242,16 @@ def runGame():
                                         
 
                             popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
+                            
+                                
                             print deleteList
                             if len(deleteList) >= 3:
                                 for pos in deleteList:
                                     row = pos[0]
                                     column = pos[1]
                                     bubbleArray[row][column] = BLANK
+
+                            
 
                             deleteList = []
 
@@ -265,28 +273,53 @@ def runGame():
         
         pygame.display.update()
 
-        
+
+
+
 
 
 def popBubbles(bubbleArray, row, column, color, deleteList):
-    if bubbleArray[row][column] == BLANK:
-        return
-    
-    elif bubbleArray[row][column].color != color:
-        return
 
-    for bubble in deleteList:
-        if bubbleArray[bubble[0]][bubble[1]] == bubbleArray[row][column]:
+    
+    if row >= 0 and column >= 0:
+    
+        if bubbleArray[row][column] == BLANK:
+            return
+        
+        elif bubbleArray[row][column].color != color:
             return
 
-    deleteList.append((row, column))
+        for bubble in deleteList:
+            if bubbleArray[bubble[0]][bubble[1]] == bubbleArray[row][column]:
+                return
 
-    if row > 0 and row < len(bubbleArray) and column > 0 and column < ARRAYHEIGHT:
+        deleteList.append((row, column))
 
-        popBubbles(bubbleArray, row + 1, column, color, deleteList)
-        popBubbles(bubbleArray, row - 1, column, color, deleteList)
-        popBubbles(bubbleArray, row, column + 1, color, deleteList)
-        popBubbles(bubbleArray, row, column - 1, color, deleteList)
+        if row >= 0 and row < len(bubbleArray) and column >= 0 and column <= ARRAYHEIGHT:
+            if row == 0:
+                popBubbles(bubbleArray, row, column - 1, color, deleteList)
+                popBubbles(bubbleArray, row, column + 1, color, deleteList)
+
+            elif row % 2 == 0:
+                
+                popBubbles(bubbleArray, row + 1, column,         color, deleteList)
+                popBubbles(bubbleArray, row + 1, column - 1,     color, deleteList)
+                popBubbles(bubbleArray, row - 1, column,         color, deleteList)
+                popBubbles(bubbleArray, row - 1, column - 1,     color, deleteList)
+                popBubbles(bubbleArray, row,     column + 1,     color, deleteList)
+                popBubbles(bubbleArray, row,     column - 1,     color, deleteList)
+
+            else:
+                popBubbles(bubbleArray, row - 1, column,     color, deleteList)
+                popBubbles(bubbleArray, row - 1, column + 1, color, deleteList)
+                popBubbles(bubbleArray, row + 1, column,     color, deleteList)
+                popBubbles(bubbleArray, row + 1, column + 1, color, deleteList)
+                popBubbles(bubbleArray, row,     column + 1, color, deleteList)
+                popBubbles(bubbleArray, row,     column - 1, color, deleteList)
+
+    else:
+        return
+        
 
     
     
@@ -340,7 +373,7 @@ def deleteExtraBubbles(bubbleArray):
         for column in range(len(bubbleArray[row])):
             if bubbleArray[row][column] != BLANK:
                 if bubbleArray[row][column].rect.right > WINDOWWIDTH:
-                    del bubbleArray[row][column]
+                    bubbleArray[row][column] = BLANK
             
 
 
