@@ -3,7 +3,7 @@ from pygame.locals import *
 
 ## Constants, yo ##
 
-FPS          = 30
+FPS          = 60
 WINDOWWIDTH  = 640
 WINDOWHEIGHT = 480
 TEXTHEIGHT   = 20
@@ -123,6 +123,25 @@ class Arrow(pygame.sprite.Sprite):
         
     def draw(self):
         DISPLAYSURF.blit(self.transformImage, self.rect)
+
+
+class Score(object):
+    def __init__(self):
+        self.total = 0
+        self.font = pygame.font.SysFont('Helvetica', 15)
+        self.render = self.font.render('Score: ' + str(self.total), True, BLACK, WHITE)
+        self.rect = self.render.get_rect()
+        self.rect.left = 5
+        self.rect.bottom = WINDOWHEIGHT - 5
+        
+        
+    def update(self, deleteList):
+        self.total += ((len(deleteList)) * 10)
+        self.render = self.font.render('Score: ' + str(self.total), True, BLACK, WHITE)
+
+    def draw(self):
+        DISPLAYSURF.blit(self.render, self.rect)
+        
         
 
 
@@ -138,21 +157,23 @@ def main():
     while True:
         runGame()
         
+        
 
 
 def runGame():
     direction = None
     launchBubble = False
     newBubble = None
-    floaterList = []
     
     arrow = Arrow()
     arrowTop = arrow.rect.top
     bubbleArray = makeBubbleArray()
-    print bubbleArray[0][0].row
+    
     nextBubble = Bubble(getRandomColor())
     nextBubble.rect.right = WINDOWWIDTH - 5
     nextBubble.rect.bottom = WINDOWHEIGHT - 5
+
+    score = Score()
     
    
     while True:
@@ -190,7 +211,7 @@ def runGame():
                 newBubble.angle = 180 - newBubble.angle
 
 
-            launchBubble, newBubble = stopBubble(bubbleArray, newBubble, launchBubble)
+            launchBubble, newBubble, score = stopBubble(bubbleArray, newBubble, launchBubble, score)
 
                             
             if launchBubble == False:
@@ -205,12 +226,15 @@ def runGame():
         
         setArrayPos(bubbleArray)
         drawBubbleArray(bubbleArray)
+
+        score.draw()
         
         pygame.display.update()
+        FPSCLOCK.tick(FPS)
 
 
 
-def stopBubble(bubbleArray, newBubble, launchBubble):
+def stopBubble(bubbleArray, newBubble, launchBubble, score):
     deleteList = []
     
     for row in range(len(bubbleArray)):
@@ -299,48 +323,43 @@ def stopBubble(bubbleArray, newBubble, launchBubble):
                                 bubbleArray[newRow][newColumn].row = newRow
                                 bubbleArray[newRow][newColumn].column = newColumn
 
-                    
-                        
-    
 
                     popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
                     
-                        
-                    print deleteList
                     if len(deleteList) >= 3:
                         for pos in deleteList:
                             row = pos[0]
                             column = pos[1]
                             bubbleArray[row][column] = BLANK
+                        score.update(deleteList)
 
                     launchBubble = False
                     newBubble = None
 
-    return launchBubble, newBubble
+    return launchBubble, newBubble, score
 
                     
-
-
 
 def addBubbleToTop(bubbleArray, bubble):
     posx = bubble.rect.centerx
     leftSidex = posx - BUBBLERADIUS
 
-    columnDivision = math.modf(leftSidex / BUBBLEWIDTH)
+    columnDivision = math.modf(float(leftSidex) / float(BUBBLEWIDTH))
     column = int(columnDivision[1])
-    print column
+    print columnDivision[0]
 
-    bubbleArray[0][column] = copy.copy(bubble)
+    if columnDivision[0] < 0.5:
+        bubbleArray[0][column] = copy.copy(bubble)
+    else:
+        column += 1
+        bubbleArray[0][column] = copy.copy(bubble)
+
     row = 0
     
 
     return row, column
     
     
-
-
-
-
 
 
 def popBubbles(bubbleArray, row, column, color, deleteList):
@@ -360,8 +379,10 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
     deleteList.append((row, column))
 
     if row == 0:
-        popBubbles(bubbleArray, row, column - 1, color, deleteList)
-        popBubbles(bubbleArray, row, column + 1, color, deleteList)
+        popBubbles(bubbleArray, row,     column - 1, color, deleteList)
+        popBubbles(bubbleArray, row,     column + 1, color, deleteList)
+        popBubbles(bubbleArray, row + 1, column,     color, deleteList)
+        popBubbles(bubbleArray, row + 1, column - 1, color, deleteList)
 
     elif row % 2 == 0:
         
@@ -380,13 +401,6 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
         popBubbles(bubbleArray, row,     column + 1, color, deleteList)
         popBubbles(bubbleArray, row,     column - 1, color, deleteList)
 
-        
-
-    
-    
-
-
-
 
 
 def makeBubbleArray():
@@ -399,7 +413,7 @@ def makeBubbleArray():
         bubbleArray.append(column)
 
     for row in range(BUBBLELAYERS):
-        for column in range(5):    #len(bubbleArray[row])):
+        for column in range(len(bubbleArray[row])):
             newBubble = Bubble(getRandomColor(), row, column)
             bubbleArray[row][column] = newBubble 
             
@@ -450,14 +464,6 @@ def drawBubbleArray(bubbleArray):
 
 def getRandomColor():
     return COLORLIST[random.randint(0, len(COLORLIST)-1)]
-
-
-
-def bottomLineDraw():
-    startPos = (0, WINDOWHEIGHT - 65)
-    endPos = (WINDOWWIDTH, WINDOWHEIGHT - 65)
-    
-    pygame.draw.line(DISPLAYSURF, BLUE, startPos, endPos, 3)
 
                     
 
