@@ -144,7 +144,6 @@ def runGame():
     direction = None
     launchBubble = False
     newBubble = None
-    deleteList = []
     floaterList = []
     
     arrow = Arrow()
@@ -189,114 +188,15 @@ def runGame():
                 newBubble.angle = 180 - newBubble.angle
             elif newBubble.rect.left <= 5:
                 newBubble.angle = 180 - newBubble.angle
-            elif newBubble.rect.top <= 0:
-                newBubble = addBubbleToTop(bubbleArray, newBubble)
-                launchBubble = False
-                newBubble = None
-                
-                
 
-            for row in range(len(bubbleArray)):
-                for column in range(len(bubbleArray[row])):
-                    
-                    if bubbleArray[row][column] != BLANK and newBubble != None:
-                        if pygame.sprite.collide_rect(newBubble, bubbleArray[row][column]):
-                            if newBubble.rect.centery >= bubbleArray[row][column].rect.centery:
 
-                                if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
-                                    if row == 0 or (row) % 2 == 0:
-                                        newRow = row + 1
-                                        newColumn = column
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow - 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                        
-                                    else:
-                                        newRow = row + 1
-                                        newColumn = column + 1
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow - 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                                            
-                                elif newBubble.rect.centerx < bubbleArray[row][column].rect.centerx:
-                                    if row == 0 or row % 2 == 0:
-                                        newRow = row + 1
-                                        newColumn = column - 1
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow - 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                    else:
-                                        newRow = row + 1
-                                        newColumn = column
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow - 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                        
-                                    
-                            elif newBubble.rect.centery < bubbleArray[row][column].rect.centery:
-                                if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
-                                    if row == 0 or row % 2 == 0:
-                                        newRow = row - 1
-                                        newColumn = column
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow + 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                    else:
-                                        newRow = row - 1
-                                        newColumn = column + 1
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow + 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                    
-                                elif newBubble.rect.centerx <= bubbleArray[row][column].rect.centerx:
-                                    if row == 0 or row % 2 == 0:
-                                        newRow = row - 1
-                                        newColumn = column - 1
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow + 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
-                                        
-                                    else:
-                                        newRow = row - 1
-                                        newColumn = column
-                                        if bubbleArray[newRow][newColumn] != BLANK:
-                                            newRow = newRow + 1
-                                        bubbleArray[newRow][newColumn] = copy.copy(newBubble)
-                                        bubbleArray[newRow][newColumn].row = newRow
-                                        bubbleArray[newRow][newColumn].column = newColumn
+            launchBubble, newBubble = stopBubble(bubbleArray, newBubble, launchBubble)
 
-            
-
-                            popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
                             
-                                
-                            print deleteList
-                            if len(deleteList) >= 3:
-                                for pos in deleteList:
-                                    row = pos[0]
-                                    column = pos[1]
-                                    bubbleArray[row][column] = BLANK
-
-                            deleteList = []
-                            newBubble = None
-                            launchBubble = False
-                            nextBubble = Bubble(getRandomColor())
-                            nextBubble.rect.right = WINDOWWIDTH - 5
-                            nextBubble.rect.bottom = WINDOWHEIGHT - 5
+            if launchBubble == False:
+                nextBubble = Bubble(getRandomColor())
+                nextBubble.rect.right = WINDOWWIDTH - 5
+                nextBubble.rect.bottom = WINDOWHEIGHT - 5
                             
         nextBubble.draw()
         
@@ -309,6 +209,119 @@ def runGame():
         pygame.display.update()
 
 
+
+def stopBubble(bubbleArray, newBubble, launchBubble):
+    deleteList = []
+    
+    for row in range(len(bubbleArray)):
+        for column in range(len(bubbleArray[row])):
+            
+            if (bubbleArray[row][column] != BLANK and newBubble != None):
+                if (pygame.sprite.collide_rect(newBubble, bubbleArray[row][column])) or newBubble.rect.top < 0:
+                    if newBubble.rect.top < 0:
+                        newRow, newColumn = addBubbleToTop(bubbleArray, newBubble)
+                        
+                    elif newBubble.rect.centery >= bubbleArray[row][column].rect.centery:
+
+                        if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
+                            if row == 0 or (row) % 2 == 0:
+                                newRow = row + 1
+                                newColumn = column
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow - 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                                
+                            else:
+                                newRow = row + 1
+                                newColumn = column + 1
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow - 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                                                    
+                        elif newBubble.rect.centerx < bubbleArray[row][column].rect.centerx:
+                            if row == 0 or row % 2 == 0:
+                                newRow = row + 1
+                                newColumn = column - 1
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow - 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                            else:
+                                newRow = row + 1
+                                newColumn = column
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow - 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                                
+                            
+                    elif newBubble.rect.centery < bubbleArray[row][column].rect.centery:
+                        if newBubble.rect.centerx >= bubbleArray[row][column].rect.centerx:
+                            if row == 0 or row % 2 == 0:
+                                newRow = row - 1
+                                newColumn = column
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow + 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                            else:
+                                newRow = row - 1
+                                newColumn = column + 1
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow + 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                            
+                        elif newBubble.rect.centerx <= bubbleArray[row][column].rect.centerx:
+                            if row == 0 or row % 2 == 0:
+                                newRow = row - 1
+                                newColumn = column - 1
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow + 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+                                
+                            else:
+                                newRow = row - 1
+                                newColumn = column
+                                if bubbleArray[newRow][newColumn] != BLANK:
+                                    newRow = newRow + 1
+                                bubbleArray[newRow][newColumn] = copy.copy(newBubble)
+                                bubbleArray[newRow][newColumn].row = newRow
+                                bubbleArray[newRow][newColumn].column = newColumn
+
+                    
+                        
+    
+
+                    popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
+                    
+                        
+                    print deleteList
+                    if len(deleteList) >= 3:
+                        for pos in deleteList:
+                            row = pos[0]
+                            column = pos[1]
+                            bubbleArray[row][column] = BLANK
+
+                    launchBubble = False
+                    newBubble = None
+
+    return launchBubble, newBubble
+
+                    
+
+
+
 def addBubbleToTop(bubbleArray, bubble):
     posx = bubble.rect.centerx
     leftSidex = posx - BUBBLERADIUS
@@ -318,9 +331,10 @@ def addBubbleToTop(bubbleArray, bubble):
     print column
 
     bubbleArray[0][column] = copy.copy(bubble)
-    print bubbleArray[0][column]
+    row = 0
+    
 
-    return copy.copy(bubble)
+    return row, column
     
     
 
@@ -385,7 +399,7 @@ def makeBubbleArray():
         bubbleArray.append(column)
 
     for row in range(BUBBLELAYERS):
-        for column in range(len(bubbleArray[row])):
+        for column in range(5):    #len(bubbleArray[row])):
             newBubble = Bubble(getRandomColor(), row, column)
             bubbleArray[row][column] = newBubble 
             
