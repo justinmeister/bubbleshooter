@@ -141,6 +141,10 @@ class Score(object):
 
     def draw(self):
         DISPLAYSURF.blit(self.render, self.rect)
+
+
+
+        
         
         
 
@@ -223,6 +227,7 @@ def runGame():
         
         arrow.update(direction)
         arrow.draw()
+
         
         setArrayPos(bubbleArray)
         drawBubbleArray(bubbleArray)
@@ -232,6 +237,80 @@ def runGame():
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
+
+
+def checkForFloaters(bubbleArray):
+    bubbleList = [column for column in range(len(bubbleArray[0]))
+                         if bubbleArray[0][column] != BLANK]
+
+    newBubbleList = []
+
+    for i in range(len(bubbleList)):
+        if i == 0:
+            newBubbleList.append(bubbleList[i])
+        elif bubbleList[i] > bubbleList[i - 1] + 1:
+            newBubbleList.append(bubbleList[i])
+
+    copyOfBoard = copy.deepcopy(bubbleArray)
+
+    for row in range(len(bubbleArray)):
+        for column in range(len(bubbleArray[0])):
+            bubbleArray[row][column] = BLANK
+    
+
+    for column in newBubbleList:
+        popFloaters(bubbleArray, copyOfBoard, column)
+
+
+
+def popFloaters(bubbleArray, copyOfBoard, column, row=0):
+    if (row < 0 or row > (len(bubbleArray)-1)
+                or column < 0 or column > (len(bubbleArray[0])-1)):
+        return
+    
+    elif copyOfBoard[row][column] == BLANK:
+        return
+
+    elif bubbleArray[row][column] == copyOfBoard[row][column]:
+        return
+
+    bubbleArray[row][column] = copyOfBoard[row][column]
+    
+
+    if row == 0:
+        popFloaters(bubbleArray, copyOfBoard, column + 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column,     row + 1)
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row + 1)
+
+    elif row % 2 == 0:
+        popFloaters(bubbleArray, copyOfBoard, column + 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column,     row + 1)
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row + 1)
+        popFloaters(bubbleArray, copyOfBoard, column,     row - 1)
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row - 1)
+
+    else:
+        popFloaters(bubbleArray, copyOfBoard, column + 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column - 1, row    )
+        popFloaters(bubbleArray, copyOfBoard, column,     row + 1)
+        popFloaters(bubbleArray, copyOfBoard, column + 1, row + 1)
+        popFloaters(bubbleArray, copyOfBoard, column,     row - 1)
+        popFloaters(bubbleArray, copyOfBoard, column + 1, row - 1)
+        
+
+    
+    
+
+    
+    
+    
+
+    
+        
+
+    
 
 
 def stopBubble(bubbleArray, newBubble, launchBubble, score):
@@ -326,11 +405,14 @@ def stopBubble(bubbleArray, newBubble, launchBubble, score):
 
                     popBubbles(bubbleArray, newRow, newColumn, newBubble.color, deleteList)
                     
+                    
                     if len(deleteList) >= 3:
                         for pos in deleteList:
                             row = pos[0]
                             column = pos[1]
                             bubbleArray[row][column] = BLANK
+                        checkForFloaters(bubbleArray)
+                        
                         score.update(deleteList)
 
                     launchBubble = False
@@ -403,14 +485,11 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
 
 
 
-def makeBubbleArray():
-    bubbleArray = []
 
-    for row in range(ARRAYHEIGHT):
-        column = []
-        for i in range(ARRAYWIDTH):
-            column.append(BLANK)
-        bubbleArray.append(column)
+
+
+def makeBubbleArray():
+    bubbleArray = makeBlankBoard()
 
     for row in range(BUBBLELAYERS):
         for column in range(len(bubbleArray[row])):
@@ -418,6 +497,17 @@ def makeBubbleArray():
             bubbleArray[row][column] = newBubble 
             
     setArrayPos(bubbleArray)
+    return bubbleArray
+
+
+
+def makeBlankBoard(bubbleArray=[]):
+    for row in range(ARRAYHEIGHT):
+        column = []
+        for i in range(ARRAYWIDTH):
+            column.append(BLANK)
+        bubbleArray.append(column)
+
     return bubbleArray
 
 
