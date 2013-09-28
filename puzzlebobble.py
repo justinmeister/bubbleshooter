@@ -165,19 +165,21 @@ def main():
 
 
 def runGame():
+    gameColorList = copy.deepcopy(COLORLIST)
     direction = None
     launchBubble = False
     newBubble = None
     
     arrow = Arrow()
     arrowTop = arrow.rect.top
-    bubbleArray = makeBubbleArray()
+    bubbleArray = makeBubbleArray(gameColorList)
     
-    nextBubble = Bubble(getRandomColor())
+    nextBubble = Bubble(getRandomColor(gameColorList))
     nextBubble.rect.right = WINDOWWIDTH - 5
     nextBubble.rect.bottom = WINDOWHEIGHT - 5
 
     score = Score()
+    
     
    
     while True:
@@ -219,7 +221,8 @@ def runGame():
 
                             
             if launchBubble == False:
-                nextBubble = Bubble(getRandomColor())
+                gameColorList = updateColorList(bubbleArray)
+                nextBubble = Bubble(getRandomColor(gameColorList))
                 nextBubble.rect.right = WINDOWWIDTH - 5
                 nextBubble.rect.bottom = WINDOWHEIGHT - 5
                             
@@ -236,6 +239,23 @@ def runGame():
         
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+
+
+
+
+def updateColorList(bubbleArray):
+    newColorList = []
+
+    for row in range(len(bubbleArray)):
+        for column in range(len(bubbleArray[0])):
+            if bubbleArray[row][column] != BLANK:
+                newColorList.append(bubbleArray[row][column].color)
+
+    colorSet = set(newColorList)
+
+    return list(colorSet)
+    
+    
 
 
 
@@ -488,12 +508,12 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
 
 
 
-def makeBubbleArray():
+def makeBubbleArray(gameColorList):
     bubbleArray = makeBlankBoard()
 
     for row in range(BUBBLELAYERS):
         for column in range(len(bubbleArray[row])):
-            newBubble = Bubble(getRandomColor(), row, column)
+            newBubble = Bubble(getRandomColor(gameColorList), row, column)
             bubbleArray[row][column] = newBubble 
             
     setArrayPos(bubbleArray)
@@ -552,8 +572,8 @@ def drawBubbleArray(bubbleArray):
 
 
 
-def getRandomColor():
-    return COLORLIST[random.randint(0, len(COLORLIST)-1)]
+def getRandomColor(gameColorList):
+    return gameColorList[random.randint(0, len(gameColorList)-1)]
 
                     
 
