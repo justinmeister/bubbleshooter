@@ -1,6 +1,6 @@
 ## A bubble shooter game built with pygame.
 ## Music by Steven O'Brien
-
+## Hope you like it! ##
 
 
 import math, pygame, sys, os, copy, time, random
