@@ -97,7 +97,7 @@ class Arrow(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.angle = 90
-        arrowImage = pygame.image.load('Arrow.png')
+        arrowImage = pygame.image.load('arrow.png')
         arrowRect = arrowImage.get_rect()
         self.image = arrowImage
         self.transformImage = self.image
@@ -171,7 +171,6 @@ def runGame():
     
     arrow = Arrow()
     bubbleArray = makeBlankBoard()
-    print len(bubbleArray)
     setBubbles(bubbleArray, gameColorList)
     
     nextBubble = Bubble(gameColorList[0])
