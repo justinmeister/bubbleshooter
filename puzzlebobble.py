@@ -92,7 +92,6 @@ class Bubble(pygame.sprite.Sprite):
 
 
 
-
 class Arrow(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -144,11 +143,6 @@ class Score(object):
 
 
 
-        
-        
-        
-
-
 def main():
     global FPSCLOCK, DISPLAYSURF, DISPLAYRECT, MAINFONT
     pygame.init()
@@ -156,12 +150,14 @@ def main():
     pygame.display.set_caption('Puzzle Bobble')
     MAINFONT = pygame.font.SysFont('Helvetica', TEXTHEIGHT)
     DISPLAYSURF, DISPLAYRECT = makeDisplay()
+    pygame.mixer.music.load('bgmusic.ogg')
+    pygame.mixer.music.play(-1, 0)
     
 
     while True:
-        runGame()
-        
-        
+        score = runGame()
+        endScreen(score)
+
 
 
 def runGame():
@@ -219,12 +215,35 @@ def runGame():
 
             launchBubble, newBubble, score = stopBubble(bubbleArray, newBubble, launchBubble, score)
 
+            finalBubbleList = []
+            for row in range(len(bubbleArray)):
+                for column in range(len(bubbleArray[0])):
+                    if bubbleArray[row][column] != BLANK:
+                        finalBubbleList.append(bubbleArray[row][column])
+
+            
+            
+            if len(finalBubbleList) < 1:
+                return score.total
+                                        
+                        
+            
+            gameColorList = updateColorList(bubbleArray)
+            random.shuffle(gameColorList)
+            
+                    
                             
             if launchBubble == False:
-                gameColorList = updateColorList(bubbleArray)
-                nextBubble = Bubble(getRandomColor(gameColorList))
+                
+                
+                
+                
+                nextBubble = Bubble(gameColorList[0])
                 nextBubble.rect.right = WINDOWWIDTH - 5
                 nextBubble.rect.bottom = WINDOWHEIGHT - 5
+
+        
+        
                             
         nextBubble.draw()
         
@@ -253,7 +272,14 @@ def updateColorList(bubbleArray):
 
     colorSet = set(newColorList)
 
-    return list(colorSet)
+    if len(colorSet) < 1:
+        colorList = []
+        colorList.append(WHITE)
+        return colorList
+
+    else:
+
+        return list(colorSet)
     
     
 
@@ -320,21 +346,10 @@ def popFloaters(bubbleArray, copyOfBoard, column, row=0):
         popFloaters(bubbleArray, copyOfBoard, column + 1, row - 1)
         
 
-    
-    
-
-    
-    
-    
-
-    
-        
-
-    
-
 
 def stopBubble(bubbleArray, newBubble, launchBubble, score):
     deleteList = []
+    popSound = pygame.mixer.Sound('popcork.ogg')
     
     for row in range(len(bubbleArray)):
         for column in range(len(bubbleArray[row])):
@@ -428,6 +443,7 @@ def stopBubble(bubbleArray, newBubble, launchBubble, score):
                     
                     if len(deleteList) >= 3:
                         for pos in deleteList:
+                            popSound.play()
                             row = pos[0]
                             column = pos[1]
                             bubbleArray[row][column] = BLANK
@@ -448,7 +464,6 @@ def addBubbleToTop(bubbleArray, bubble):
 
     columnDivision = math.modf(float(leftSidex) / float(BUBBLEWIDTH))
     column = int(columnDivision[1])
-    print columnDivision[0]
 
     if columnDivision[0] < 0.5:
         bubbleArray[0][column] = copy.copy(bubble)
@@ -502,8 +517,6 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
         popBubbles(bubbleArray, row + 1, column + 1, color, deleteList)
         popBubbles(bubbleArray, row,     column + 1, color, deleteList)
         popBubbles(bubbleArray, row,     column - 1, color, deleteList)
-
-
 
 
 
@@ -573,7 +586,10 @@ def drawBubbleArray(bubbleArray):
 
 
 def getRandomColor(gameColorList):
-    return gameColorList[random.randint(0, len(gameColorList)-1)]
+    if len(gameColorList) == 1:
+        return 0
+    else:
+        return gameColorList[random.randint(0, len(gameColorList)-1)]
 
                     
 
@@ -590,7 +606,28 @@ def makeDisplay():
 def terminate():
     pygame.quit()
     sys.exit()
-        
+
+
+
+def endScreen(score):
+    endFont = pygame.font.SysFont('Helvetica', 20)
+    endMessage1 = endFont.render('You win! Your Score is ' + str(score) + '. Press Enter to Play Again.', True, BLACK, BGCOLOR)
+    endMessage1Rect = endMessage1.get_rect()
+    endMessage1Rect.center = DISPLAYRECT.center
+
+    DISPLAYSURF.fill(BGCOLOR)
+    DISPLAYSURF.blit(endMessage1, endMessage1Rect)
+    pygame.display.update()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                terminate()
+            elif event.type == KEYUP:
+                if event.key == K_RETURN:
+                    return
+                elif event.key == K_ESCAPE:
+                    terminate()
         
         
 if __name__ == '__main__':
