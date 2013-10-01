@@ -155,26 +155,31 @@ def main():
     
 
     while True:
-        score = runGame()
-        endScreen(score)
+        score, winorlose = runGame()
+        endScreen(score, winorlose)
 
 
 
 def runGame():
+    
     gameColorList = copy.deepcopy(COLORLIST)
     direction = None
     launchBubble = False
     newBubble = None
     
-    arrow = Arrow()
-    arrowTop = arrow.rect.top
-    bubbleArray = makeBubbleArray(gameColorList)
     
-    nextBubble = Bubble(getRandomColor(gameColorList))
+    
+    arrow = Arrow()
+    bubbleArray = makeBlankBoard()
+    print len(bubbleArray)
+    setBubbles(bubbleArray, gameColorList)
+    
+    nextBubble = Bubble(gameColorList[0])
     nextBubble.rect.right = WINDOWWIDTH - 5
     nextBubble.rect.bottom = WINDOWHEIGHT - 5
 
     score = Score()
+    
     
     
    
@@ -220,11 +225,13 @@ def runGame():
                 for column in range(len(bubbleArray[0])):
                     if bubbleArray[row][column] != BLANK:
                         finalBubbleList.append(bubbleArray[row][column])
+                        if bubbleArray[row][column].rect.bottom > (WINDOWHEIGHT - arrow.rect.height - 10):
+                            return score.total, 'lose'
 
             
             
             if len(finalBubbleList) < 1:
-                return score.total
+                return score.total, 'win'
                                         
                         
             
@@ -234,9 +241,6 @@ def runGame():
                     
                             
             if launchBubble == False:
-                
-                
-                
                 
                 nextBubble = Bubble(gameColorList[0])
                 nextBubble.rect.right = WINDOWWIDTH - 5
@@ -259,6 +263,63 @@ def runGame():
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
+
+
+
+def makeBlankBoard():
+    array = []
+    
+    for row in range(ARRAYHEIGHT):
+        column = []
+        for i in range(ARRAYWIDTH):
+            column.append(BLANK)
+        array.append(column)
+
+    return array
+
+
+
+
+def setBubbles(array, gameColorList):
+    for row in range(BUBBLELAYERS):
+        for column in range(len(array[row])):
+            random.shuffle(gameColorList)
+            newBubble = Bubble(gameColorList[0], row, column)
+            array[row][column] = newBubble 
+            
+    setArrayPos(array)
+
+
+
+
+
+def setArrayPos(array):
+    for row in range(ARRAYHEIGHT):
+        for column in range(len(array[row])):
+            if array[row][column] != BLANK:
+                array[row][column].rect.x = (BUBBLEWIDTH * column) + 5
+                array[row][column].rect.y = (BUBBLEWIDTH * row) + 5
+
+    for row in range(1, ARRAYHEIGHT, 2):
+        for column in range(len(array[row])):
+            if array[row][column] != BLANK:
+                array[row][column].rect.x += BUBBLERADIUS
+
+    for row in range(1, ARRAYHEIGHT):
+        for column in range(len(array[row])):
+            if array[row][column] != BLANK:
+                array[row][column].rect.y -= BUBBLEYADJUST * row
+
+    deleteExtraBubbles(array)
+
+
+
+def deleteExtraBubbles(array):
+    for row in range(ARRAYHEIGHT):
+        for column in range(len(array[row])):
+            if array[row][column] != BLANK:
+                if array[row][column].rect.right > WINDOWWIDTH:
+                    array[row][column] = BLANK
 
 
 
@@ -384,6 +445,8 @@ def stopBubble(bubbleArray, newBubble, launchBubble, score):
                             if row == 0 or row % 2 == 0:
                                 newRow = row + 1
                                 newColumn = column - 1
+                                if newColumn < 0:
+                                    newColumn = 0
                                 if bubbleArray[newRow][newColumn] != BLANK:
                                     newRow = newRow - 1
                                 bubbleArray[newRow][newColumn] = copy.copy(newBubble)
@@ -517,79 +580,17 @@ def popBubbles(bubbleArray, row, column, color, deleteList):
         popBubbles(bubbleArray, row + 1, column + 1, color, deleteList)
         popBubbles(bubbleArray, row,     column + 1, color, deleteList)
         popBubbles(bubbleArray, row,     column - 1, color, deleteList)
-
-
-
-
-def makeBubbleArray(gameColorList):
-    bubbleArray = makeBlankBoard()
-
-    for row in range(BUBBLELAYERS):
-        for column in range(len(bubbleArray[row])):
-            newBubble = Bubble(getRandomColor(gameColorList), row, column)
-            bubbleArray[row][column] = newBubble 
-            
-    setArrayPos(bubbleArray)
-    return bubbleArray
-
-
-
-def makeBlankBoard(bubbleArray=[]):
-    for row in range(ARRAYHEIGHT):
-        column = []
-        for i in range(ARRAYWIDTH):
-            column.append(BLANK)
-        bubbleArray.append(column)
-
-    return bubbleArray
-
-
-
-def setArrayPos(bubbleArray):
-    for row in range(ARRAYHEIGHT):
-        for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column] != BLANK:
-                bubbleArray[row][column].rect.x = (BUBBLEWIDTH * column) + 5
-                bubbleArray[row][column].rect.y = (BUBBLEWIDTH * row) + 5
-
-    for row in range(1, ARRAYHEIGHT, 2):
-        for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column] != BLANK:
-                bubbleArray[row][column].rect.x += BUBBLERADIUS
-
-    for row in range(1, ARRAYHEIGHT):
-        for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column] != BLANK:
-                bubbleArray[row][column].rect.y -= BUBBLEYADJUST * row
-
-    deleteExtraBubbles(bubbleArray)
-
-
-
-def deleteExtraBubbles(bubbleArray):
-    for row in range(ARRAYHEIGHT):
-        for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column] != BLANK:
-                if bubbleArray[row][column].rect.right > WINDOWWIDTH:
-                    bubbleArray[row][column] = BLANK
             
 
 
-def drawBubbleArray(bubbleArray):
+def drawBubbleArray(array):
     for row in range(ARRAYHEIGHT):
-        for column in range(len(bubbleArray[row])):
-            if bubbleArray[row][column] != BLANK:
-                bubble = bubbleArray[row][column]
+        for column in range(len(array[row])):
+            if array[row][column] != BLANK:
+                bubble = array[row][column]
                 pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
                 pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
 
-
-
-def getRandomColor(gameColorList):
-    if len(gameColorList) == 1:
-        return 0
-    else:
-        return gameColorList[random.randint(0, len(gameColorList)-1)]
 
                     
 
@@ -609,9 +610,9 @@ def terminate():
 
 
 
-def endScreen(score):
+def endScreen(score, winorlose):
     endFont = pygame.font.SysFont('Helvetica', 20)
-    endMessage1 = endFont.render('You win! Your Score is ' + str(score) + '. Press Enter to Play Again.', True, BLACK, BGCOLOR)
+    endMessage1 = endFont.render('You ' + winorlose + '! Your Score is ' + str(score) + '. Press Enter to Play Again.', True, BLACK, BGCOLOR)
     endMessage1Rect = endMessage1.get_rect()
     endMessage1Rect.center = DISPLAYRECT.center
 
