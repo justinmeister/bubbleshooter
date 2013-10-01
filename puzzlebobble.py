@@ -1,4 +1,5 @@
 import math, pygame, sys, os, copy, time, random
+import pygame.gfxdraw
 from pygame.locals import *
 
 ## Constants, yo ##
@@ -10,7 +11,7 @@ TEXTHEIGHT   = 20
 BUBBLERADIUS = 20
 BUBBLEWIDTH  = BUBBLERADIUS * 2
 BUBBLELAYERS = 5
-BUBBLEYADJUST = 7
+BUBBLEYADJUST = 5
 STARTX = WINDOWWIDTH / 2
 STARTY = WINDOWHEIGHT - 27
 ARRAYWIDTH = 16
@@ -73,8 +74,9 @@ class Bubble(pygame.sprite.Sprite):
 
 
     def draw(self):
-        pygame.draw.circle(DISPLAYSURF, self.color, (self.rect.centerx, self.rect.centery), self.radius)
-        pygame.draw.circle(DISPLAYSURF, GRAY, (self.rect.centerx, self.rect.centery), self.radius, 1)
+        pygame.gfxdraw.filled_circle(DISPLAYSURF, self.rect.centerx, self.rect.centery, self.radius, self.color)
+        pygame.gfxdraw.aacircle(DISPLAYSURF, self.rect.centerx, self.rect.centery, self.radius, GRAY)
+        
 
 
     def xcalculate(self, angle):
@@ -98,11 +100,12 @@ class Arrow(pygame.sprite.Sprite):
 
         self.angle = 90
         arrowImage = pygame.image.load('arrow.png')
+        arrowImage.convert_alpha()
         arrowRect = arrowImage.get_rect()
         self.image = arrowImage
         self.transformImage = self.image
         self.rect = arrowRect
-        self.rect.centerx = STARTX
+        self.rect.centerx = STARTX 
         self.rect.centery = STARTY
         
 
@@ -116,7 +119,7 @@ class Arrow(pygame.sprite.Sprite):
 
         self.transformImage = pygame.transform.rotate(self.image, self.angle)
         self.rect = self.transformImage.get_rect()
-        self.rect.centerx = STARTX
+        self.rect.centerx = STARTX 
         self.rect.centery = STARTY
 
         
@@ -150,8 +153,7 @@ def main():
     pygame.display.set_caption('Puzzle Bobble')
     MAINFONT = pygame.font.SysFont('Helvetica', TEXTHEIGHT)
     DISPLAYSURF, DISPLAYRECT = makeDisplay()
-    pygame.mixer.music.load('bgmusic.ogg')
-    pygame.mixer.music.play(-1, 0)
+    
     
 
     while True:
@@ -161,7 +163,10 @@ def main():
 
 
 def runGame():
-    
+    musicList =['bgmusic.ogg', 'Utopian_Theme.ogg', 'Goofy_Theme.ogg']
+    pygame.mixer.music.load(musicList[0])
+    pygame.mixer.music.play()
+    track = 0
     gameColorList = copy.deepcopy(COLORLIST)
     direction = None
     launchBubble = False
@@ -206,6 +211,7 @@ def runGame():
             if newBubble == None:
                 newBubble = Bubble(nextBubble.color)
                 newBubble.angle = arrow.angle
+                
 
             newBubble.update()
             newBubble.draw()
@@ -249,6 +255,8 @@ def runGame():
         
                             
         nextBubble.draw()
+        if launchBubble == True:
+            coverNextBubble()
         
         arrow.update(direction)
         arrow.draw()
@@ -258,6 +266,17 @@ def runGame():
         drawBubbleArray(bubbleArray)
 
         score.draw()
+
+        if pygame.mixer.music.get_busy() == False:
+            if track == len(musicList) - 1:
+                track = 0
+            else:
+                track += 1
+
+            pygame.mixer.music.load(musicList[track])
+            pygame.mixer.music.play(-1)
+
+            
         
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -303,11 +322,12 @@ def setArrayPos(array):
         for column in range(len(array[row])):
             if array[row][column] != BLANK:
                 array[row][column].rect.x += BUBBLERADIUS
+                
 
     for row in range(1, ARRAYHEIGHT):
         for column in range(len(array[row])):
             if array[row][column] != BLANK:
-                array[row][column].rect.y -= BUBBLEYADJUST * row
+                array[row][column].rect.y -= (BUBBLEYADJUST * row)
 
     deleteExtraBubbles(array)
 
@@ -586,9 +606,7 @@ def drawBubbleArray(array):
     for row in range(ARRAYHEIGHT):
         for column in range(len(array[row])):
             if array[row][column] != BLANK:
-                bubble = array[row][column]
-                pygame.draw.circle(DISPLAYSURF, bubble.color, bubble.rect.center, BUBBLERADIUS)
-                pygame.draw.circle(DISPLAYSURF, GRAY, bubble.rect.center, BUBBLERADIUS, 1)
+                array[row][column].draw()
 
 
                     
@@ -606,6 +624,13 @@ def makeDisplay():
 def terminate():
     pygame.quit()
     sys.exit()
+
+
+def coverNextBubble():
+    whiteRect = pygame.Rect(0, 0, BUBBLEWIDTH, BUBBLEWIDTH)
+    whiteRect.bottom = WINDOWHEIGHT
+    whiteRect.right = WINDOWWIDTH
+    pygame.draw.rect(DISPLAYSURF, BGCOLOR, whiteRect)
 
 
 
