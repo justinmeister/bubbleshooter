@@ -1,3 +1,8 @@
+## A bubble shooter game built with pygame.
+## Music by Steven O'Brien
+
+
+
 import math, pygame, sys, os, copy, time, random
 import pygame.gfxdraw
 from pygame.locals import *
@@ -260,6 +265,7 @@ def runGame():
         
         arrow.update(direction)
         arrow.draw()
+
 
         
         setArrayPos(bubbleArray)
