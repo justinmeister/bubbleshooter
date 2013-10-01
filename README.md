@@ -5,4 +5,6 @@ A bubble shooter made with pygame.  The arrow is controlled by the arrow keys.  
 using floodfill.  
 
 Music by: Steven O'Brien - 'Short Upbeat Piece for Guitar in D major'
+'Utopian Theme'
+'Goofy Theme'
 https://soundcloud.com/stevenobrien/short-upbeat-piece-for-guitar
