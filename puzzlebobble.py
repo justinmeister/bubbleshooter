@@ -274,7 +274,7 @@ def runGame():
                 track += 1
 
             pygame.mixer.music.load(musicList[track])
-            pygame.mixer.music.play(-1)
+            pygame.mixer.music.play()
 
             
         
