@@ -9,7 +9,7 @@ from pygame.locals import *
 
 ## Constants, yo ##
 
-FPS          = 60
+FPS          = 120
 WINDOWWIDTH  = 640
 WINDOWHEIGHT = 480
 TEXTHEIGHT   = 20
