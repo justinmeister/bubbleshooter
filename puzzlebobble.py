@@ -104,7 +104,7 @@ class Arrow(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
 
         self.angle = 90
-        arrowImage = pygame.image.load('arrow.png')
+        arrowImage = pygame.image.load('Arrow.png')
         arrowImage.convert_alpha()
         arrowRect = arrowImage.get_rect()
         self.image = arrowImage
