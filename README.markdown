@@ -1,4 +1,4 @@
-bubbleshooter
+Bubbleshooter
 =============
 
 ![screenshot](https://raw.github.com/justinmeister/bubbleshooter/master/bubble_shooter_screenshot.png)
