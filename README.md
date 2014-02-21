@@ -1,7 +1,7 @@
-bubbleshooter
+Bubbleshooter
 =============
 
-![screenshot](https://raw.github.com/justinmeister/master/bubbleshooter/bubble_shooter_screenshot.png)
+![screenshot](https://raw.github.com/justinmeister/bubbleshooter/master/bubble_shooter_screenshot.png)
 
 A bubble shooter made with pygame.  The arrow is controlled by the arrow keys.  Bubbles pop if three or more match up 
 using floodfill.  
